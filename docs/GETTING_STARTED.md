@@ -25,8 +25,9 @@ This guide will help you set up and run your first robot control experiment.
 4. **Build the ROS 2 Workspace**
    Inside the container:
    ```bash
-   ./scripts/build_ros.sh
-   source /workspace/ros2_ws/install/setup.bash
+   cd /workspace/ros2_ws
+   colcon build --symlink-install
+   source install/setup.bash
    ```
 
 ### Option 2: Local Installation

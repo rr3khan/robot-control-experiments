@@ -8,6 +8,7 @@ services:
       - ./python_controllers:/workspace/python_controllers
       - ./logs:/workspace/logs
       - ./data:/workspace/data
+      - ./scripts:/workspace/scripts
     environment:
       - ROS_DOMAIN_ID=42
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
