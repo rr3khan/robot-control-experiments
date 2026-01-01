@@ -1,0 +1,37 @@
+# Configuration file for PID controller experiments
+
+controller:
+  type: "PID"
+  config:
+    # PID gains for linear velocity
+    kp_linear: 1.0
+    ki_linear: 0.0
+    kd_linear: 0.1
+    
+    # PID gains for angular velocity
+    kp_angular: 2.0
+    ki_angular: 0.0
+    kd_angular: 0.2
+    
+    # Velocity limits
+    max_linear_vel: 0.5    # m/s
+    max_angular_vel: 2.0   # rad/s
+    
+    # Tolerances
+    position_tolerance: 0.05      # m
+    orientation_tolerance: 0.1    # rad
+
+robot:
+  wheel_radius: 0.05    # m (5 cm)
+  wheel_base: 0.3       # m (30 cm)
+  
+experiment:
+  id: "pid_test_001"
+  update_rate: 50.0     # Hz
+  
+  # Target waypoints (x, y, theta)
+  waypoints:
+    - [1.0, 0.0, 0.0]
+    - [1.0, 1.0, 1.57]
+    - [0.0, 1.0, 3.14]
+    - [0.0, 0.0, 0.0]
