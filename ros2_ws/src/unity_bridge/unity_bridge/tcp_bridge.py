@@ -110,22 +110,38 @@ class UnityTCPBridge(Node):
                     if not data:
                         break
                     
-                    cmd_data = json.loads(data.decode('utf-8'))
-                    
-                    if cmd_data.get('type') == 'control':
-                        # Create and publish control command
-                        cmd_msg = ControlCommand()
-                        cmd_msg.header.stamp = self.get_clock().now().to_msg()
-                        cmd_msg.linear_velocity = cmd_data.get('linear_velocity', 0.0)
-                        cmd_msg.angular_velocity = cmd_data.get('angular_velocity', 0.0)
-                        cmd_msg.control_mode = 0
+                    try:
+                        cmd_data = json.loads(data.decode('utf-8'))
                         
-                        self.cmd_pub.publish(cmd_msg)
+                        # Validate JSON structure
+                        if not isinstance(cmd_data, dict):
+                            self.get_logger().warn('Invalid JSON: expected object')
+                            continue
+                        
+                        if cmd_data.get('type') == 'control':
+                            # Validate and sanitize control values
+                            linear_vel = float(cmd_data.get('linear_velocity', 0.0))
+                            angular_vel = float(cmd_data.get('angular_velocity', 0.0))
+                            
+                            # Sanity check on velocity values
+                            if abs(linear_vel) > 10.0 or abs(angular_vel) > 10.0:
+                                self.get_logger().warn('Control values out of reasonable range')
+                                continue
+                            
+                            # Create and publish control command
+                            cmd_msg = ControlCommand()
+                            cmd_msg.header.stamp = self.get_clock().now().to_msg()
+                            cmd_msg.linear_velocity = linear_vel
+                            cmd_msg.angular_velocity = angular_vel
+                            cmd_msg.control_mode = 0
+                            
+                            self.cmd_pub.publish(cmd_msg)
+                    except (json.JSONDecodeError, ValueError, TypeError) as e:
+                        self.get_logger().warn(f'Failed to parse or validate command: {e}')
+                        continue
                         
                 except socket.timeout:
                     pass
-                except json.JSONDecodeError:
-                    self.get_logger().warn('Invalid JSON received from Unity')
                 
                 time.sleep(0.02)  # 50 Hz update rate
                 

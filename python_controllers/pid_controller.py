@@ -36,7 +36,8 @@ class PIDController(Controller):
             'max_linear_vel': 0.5,
             'max_angular_vel': 2.0,
             'position_tolerance': 0.05,
-            'orientation_tolerance': 0.1
+            'orientation_tolerance': 0.1,
+            'max_integral_error': 10.0  # Windup protection
         }
         
         if config:
@@ -87,8 +88,11 @@ class PIDController(Controller):
             angular_error = self._normalize_angle(target_theta - theta)
             distance_error = 0.0
         
-        # PID for linear velocity
+        # PID for linear velocity with anti-windup
         self.error_sum_linear += distance_error
+        # Clamp integral error to prevent windup
+        max_integral = self.config.get('max_integral_error', 10.0)
+        self.error_sum_linear = max(-max_integral, min(max_integral, self.error_sum_linear))
         error_diff_linear = distance_error - self.prev_error_linear
         
         linear_vel = (
@@ -97,8 +101,10 @@ class PIDController(Controller):
             self.config['kd_linear'] * error_diff_linear
         )
         
-        # PID for angular velocity
+        # PID for angular velocity with anti-windup
         self.error_sum_angular += angular_error
+        # Clamp integral error to prevent windup
+        self.error_sum_angular = max(-max_integral, min(max_integral, self.error_sum_angular))
         error_diff_angular = angular_error - self.prev_error_angular
         
         angular_vel = (

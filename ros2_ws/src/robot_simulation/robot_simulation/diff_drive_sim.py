@@ -65,8 +65,11 @@ class DifferentialDriveRobot:
             icc_y = self.y + radius * math.cos(self.theta)
             
             d_theta = self.omega * dt
-            self.x = math.cos(d_theta) * (self.x - icc_x) - math.sin(d_theta) * (self.y - icc_y) + icc_x
-            self.y = math.sin(d_theta) * (self.x - icc_x) + math.cos(d_theta) * (self.y - icc_y) + icc_y
+            # Store original position before updating
+            old_x = self.x
+            old_y = self.y
+            self.x = math.cos(d_theta) * (old_x - icc_x) - math.sin(d_theta) * (old_y - icc_y) + icc_x
+            self.y = math.sin(d_theta) * (old_x - icc_x) + math.cos(d_theta) * (old_y - icc_y) + icc_y
             self.theta += d_theta
         
         # Normalize theta to [-pi, pi]

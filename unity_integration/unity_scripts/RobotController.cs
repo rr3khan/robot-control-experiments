@@ -167,19 +167,39 @@ public class RobotController : MonoBehaviour
         // Simplified JSON parsing (use JsonUtility or Newtonsoft.Json for production)
         try
         {
-            int linVelIndex = json.IndexOf("\"linear_velocity\":");
-            int angVelIndex = json.IndexOf("\"angular_velocity\":");
+            // More robust parsing using string constants
+            string linearVelKey = "\"linear_velocity\":";
+            string angularVelKey = "\"angular_velocity\":";
+            
+            int linVelIndex = json.IndexOf(linearVelKey);
+            int angVelIndex = json.IndexOf(angularVelKey);
             
             if (linVelIndex != -1 && angVelIndex != -1)
             {
-                string linVelStr = json.Substring(linVelIndex + 18);
+                string linVelStr = json.Substring(linVelIndex + linearVelKey.Length);
                 linVelStr = linVelStr.Substring(0, linVelStr.IndexOfAny(new char[] { ',', '}' }));
                 
-                string angVelStr = json.Substring(angVelIndex + 19);
+                string angVelStr = json.Substring(angVelIndex + angularVelKey.Length);
                 angVelStr = angVelStr.Substring(0, angVelStr.IndexOfAny(new char[] { ',', '}' }));
                 
-                targetLinearVel = float.Parse(linVelStr);
-                targetAngularVel = float.Parse(angVelStr);
+                // Use TryParse for safe parsing
+                if (float.TryParse(linVelStr, out float parsedLinear))
+                {
+                    targetLinearVel = parsedLinear;
+                }
+                else
+                {
+                    Debug.LogWarning($"Failed to parse linear velocity: {linVelStr}");
+                }
+                
+                if (float.TryParse(angVelStr, out float parsedAngular))
+                {
+                    targetAngularVel = parsedAngular;
+                }
+                else
+                {
+                    Debug.LogWarning($"Failed to parse angular velocity: {angVelStr}");
+                }
             }
         }
         catch (Exception e)
