@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robot_simulation"
+version = "0.1.0"
+description = "Differential drive robot simulation for control experiments"
+authors = [
+    {name = "Robot Control Team", email = "user@example.com"}
+]
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+    "rclpy",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ament_copyright",
+    "ament_flake8",
+    "ament_pep257",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["robot_simulation*"]
+exclude = ["test*"]
