@@ -12,14 +12,14 @@ RUN apt-get update && apt-get install -y \
 
 # Set up workspace
 WORKDIR /workspace
-COPY ros2_ws /workspace/ros2_ws
 
-# Install Python dependencies
-COPY requirements.txt /workspace/
+# Copy all project files
+COPY . /workspace/
 RUN pip3 install -r /workspace/requirements.txt
 
-# Source ROS 2 setup
-RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+# Source ROS 2 setup and helper functions
+RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc && \
+    echo "source /workspace/scripts/ros_helpers.sh" >> ~/.bashrc
 
 # Set environment variables
 ENV ROS_DOMAIN_ID=42

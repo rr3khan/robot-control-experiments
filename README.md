@@ -48,6 +48,7 @@ robot-control-experiments/
 ### Prerequisites
 
 - Docker and Docker Compose
+- [Task](https://taskfile.dev/) (optional but recommended for simplified workflow)
 - (Optional) Unity 2021.3 LTS or newer for 3D visualization
 
 ### 1. Clone the Repository
@@ -57,34 +58,65 @@ git clone https://github.com/rr3khan/robot-control-experiments.git
 cd robot-control-experiments
 ```
 
-### 2. Build and Start ROS 2 Container
+### 2. Quick Setup (Using Taskfile - Recommended)
+
+The easiest way to get started is using the Taskfile:
 
 ```bash
-docker-compose up -d
-docker-compose exec ros2 bash
+# Install Task if you haven't already
+# Windows (using Chocolatey): choco install go-task
+# macOS (using Homebrew): brew install go-task/tap/go-task
+# Linux: See https://taskfile.dev/installation/
+
+# One command to start everything and open a configured shell
+task dev
 ```
 
-### 3. Build ROS 2 Workspace
+This single command will:
+- Start Docker containers
+- Build the ROS 2 workspace
+- Open a bash shell with the ROS environment already sourced
 
-Inside the container:
+### 2. Manual Setup (Alternative)
+
+If you prefer not to use Taskfile:
 
 ```bash
+# Start containers and build workspace
+docker-compose up -d
+docker-compose exec ros2 bash -c "cd /workspace/ros2_ws && colcon build --symlink-install && source install/setup.bash"
+
+# Open a shell
+docker-compose exec ros2 bash
 cd /workspace/ros2_ws
-colcon build --symlink-install
 source install/setup.bash
 ```
 
-### 4. Run Robot Simulation
+### 3. Run Robot Simulation
 
-Open three terminals in the container:
+Open three terminals (using `task shell` in each, or `docker-compose exec ros2 bash`):
 
 **Terminal 1 - Robot Simulation:**
 ```bash
+# Inside container (helper function):
+ros_run_sim
+
+# Or from host:
+task run-sim
+
+# Or manually:
 ros2 run robot_simulation diff_drive_sim
 ```
 
 **Terminal 2 - Control Node:**
 ```bash
+# Inside container (helper function):
+ros_run_control
+
+# Or from host:
+task run-control
+
+# Or manually:
 python3 /workspace/docs/control_node_example.py /workspace/data/config_pid.yaml
 ```
 
@@ -99,14 +131,37 @@ logger = ROS2ExperimentLogger(node, experiment_id='test_001', output_dir='/works
 rclpy.spin(node)
 ```
 
-### 5. (Optional) Connect Unity
+### 4. (Optional) Connect Unity
 
 See [Unity Integration Guide](unity_integration/README.md) for detailed setup.
 
 ```bash
-# Run Unity bridge
+# Inside container (helper function):
+ros_run_unity_bridge
+
+# Or from host:
+task run-unity-bridge
+
+# Or manually:
 ros2 run unity_bridge tcp_bridge
 ```
+
+## 🛠️ Helper Commands Inside Container
+
+When you're inside the Docker container, you have access to convenient helper functions (automatically loaded):
+
+```bash
+ros_build          # Build ROS workspace
+ros_source         # Source ROS workspace environment
+ros_setup          # Build and source workspace (all-in-one)
+ros_run_sim        # Run robot simulation
+ros_run_control    # Run control node
+ros_run_unity_bridge # Run Unity bridge
+ros_test           # Run ROS tests
+ros_clean         # Clean build artifacts
+```
+
+These functions automatically handle sourcing the ROS environment, so you don't need to manually `cd` and `source` every time!
 
 ## 🎮 Control Algorithms
 
@@ -208,13 +263,58 @@ experiment:
 ## 🧪 Running Tests
 
 ```bash
-# Inside ROS 2 container
+# Using Taskfile (recommended)
+task test
+
+# Or manually inside ROS 2 container
 cd /workspace/ros2_ws
+source install/setup.bash
 colcon test
 colcon test-result --verbose
 ```
 
 ## 🐳 Docker Commands
+
+### Using Taskfile (Recommended)
+
+```bash
+# Complete setup and open shell
+task dev
+
+# Start containers and build workspace
+task up
+
+# Open shell with ROS environment sourced
+task shell
+
+# Run simulation
+task run-sim
+
+# Run control node
+task run-control
+
+# View logs
+task logs
+
+# Stop containers
+task down
+
+# Rebuild containers
+task rebuild
+
+# Clean build artifacts
+task clean
+
+# Run tests
+task test
+
+# See all available tasks
+task --list
+```
+
+**Note:** When inside the container, use the `ros_*` helper functions (e.g., `ros_run_sim`) instead of `task` commands. Task commands are for use from the host machine.
+
+### Manual Docker Commands
 
 ```bash
 # Start services

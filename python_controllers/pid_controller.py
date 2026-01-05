@@ -6,7 +6,11 @@ Implements a PID controller for position and orientation control.
 
 import math
 from typing import Tuple, Dict, Any
-from .base_controller import Controller
+
+try:
+    from .base_controller import Controller
+except ImportError:
+    from base_controller import Controller
 
 
 class PIDController(Controller):
