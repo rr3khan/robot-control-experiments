@@ -1,0 +1,17 @@
+services:
+  ros2:
+    build: .
+    container_name: robot_control_ros2
+    network_mode: host
+    volumes:
+      - ./ros2_ws:/workspace/ros2_ws
+      - ./python_controllers:/workspace/python_controllers
+      - ./logs:/workspace/logs
+      - ./data:/workspace/data
+      - ./scripts:/workspace/scripts
+    environment:
+      - ROS_DOMAIN_ID=42
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+    stdin_open: true
+    tty: true
+    command: /bin/bash -c "cd /workspace/ros2_ws && colcon build --symlink-install && source install/setup.bash && exec bash"

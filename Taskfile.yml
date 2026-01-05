@@ -1,0 +1,104 @@
+version: '3'
+
+vars:
+  CONTAINER: robot_control_ros2
+  ROS_WS: /workspace/ros2_ws
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  # Startup and setup tasks
+  up:
+    desc: Start Docker containers
+    cmds:
+      - docker-compose up -d
+      - echo "Waiting for container to be ready..."
+      - task: build-ros
+
+  down:
+    desc: Stop Docker containers
+    cmds:
+      - docker-compose down
+
+  restart:
+    desc: Restart Docker containers
+    cmds:
+      - task: down
+      - task: up
+
+  build-ros:
+    desc: Build ROS 2 workspace with colcon
+    cmds:
+      - docker-compose exec ros2 bash
+      - cd /workspace/ros2_ws
+      - colcon build --symlink-install
+      - echo "ROS workspace built successfully!"
+
+  setup:
+    desc: "Full setup: start containers, build ROS workspace, and source environment"
+    cmds:
+      - task: up
+      - echo "Setup complete! Use 'task shell' to enter a configured shell."
+
+  # Shell access tasks
+  shell:
+    desc: Open a bash shell in the container with ROS environment sourced
+    cmds:
+      - docker-compose exec ros2 bash -c "cd {{.ROS_WS}} && source install/setup.bash && exec bash"
+
+  shell-clean:
+    desc: Open a bash shell without sourcing ROS environment
+    cmds:
+      - docker-compose exec ros2 bash
+
+  # Development tasks
+  run-sim:
+    desc: Run the robot simulation node
+    cmds:
+      - docker-compose exec ros2 bash -c "cd {{.ROS_WS}} && source install/setup.bash && ros2 run robot_simulation diff_drive_sim"
+
+  run-control:
+    desc: Run the control node with PID config
+    cmds:
+      - docker-compose exec ros2 bash -c "cd {{.ROS_WS}} && source install/setup.bash && python3 /workspace/docs/control_node_example.py /workspace/data/config_pid.yaml"
+
+  run-unity-bridge:
+    desc: Run the Unity bridge node
+    cmds:
+      - docker-compose exec ros2 bash -c "cd {{.ROS_WS}} && source install/setup.bash && ros2 run unity_bridge tcp_bridge"
+
+  # Utility tasks
+  logs:
+    desc: View Docker container logs
+    cmds:
+      - docker-compose logs -f
+
+  rebuild:
+    desc: Rebuild Docker containers (use this after Dockerfile changes)
+    cmds:
+      - docker-compose down
+      - docker-compose build --no-cache
+      - task: up
+
+  clean:
+    desc: Clean build artifacts and logs
+    cmds:
+      - docker-compose exec -T ros2 bash -c "rm -rf {{.ROS_WS}}/build {{.ROS_WS}}/install {{.ROS_WS}}/log 2>/dev/null || true"
+      - echo "Build artifacts cleaned!"
+
+  test:
+    desc: Run ROS 2 tests
+    cmds:
+      - docker-compose exec ros2 bash -c "cd {{.ROS_WS}} && source install/setup.bash && colcon test && colcon test-result --verbose"
+
+  # Quick development workflow
+  dev:
+    desc: "Complete dev setup: start, build, and open shell (all-in-one)"
+    cmds:
+      - task: up
+      - echo "Opening shell with ROS environment ready..."
+      - docker-compose exec ros2 bash -c "cd {{.ROS_WS}} && source install/setup.bash && exec bash"
+
